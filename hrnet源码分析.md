@@ -1,8 +1,9 @@
-![image-20201027151407621](C:\Users\pc\AppData\Roaming\Typora\typora-user-images\image-20201027151407621.png)
+![在这里插入图片描述](https://img-blog.csdnimg.cn/20201029151116718.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzM5ODYyMjIz,size_16,color_FFFFFF,t_70#pic_center)
 
-论文链接：https://arxiv.org/abs/1902.09212
 
-代码链接：https://github.com/leoxiaobin/deep-high-resolution-net.pytorch
+论文链接：[https://arxiv.org/abs/1902.09212](https://arxiv.org/abs/1902.09212)
+
+代码链接：[https://github.com/leoxiaobin/deep-high-resolution-net.pytorch](https://github.com/leoxiaobin/deep-high-resolution-net.pytorch)
 
 论文源码分析：
 
@@ -169,7 +170,7 @@ _init_函数的功能在于初始化JointsDataset模型，设置一些参数和�
 **(2) _getitem_函数**
 
 ```python
-	def __getitem_(self,idx):	
+  def __getitem_(self,idx): 
         db_rec = copy.deepcopy(self.db[idx])
         image_file = db_rec['image']
         filename = db_rec['filename'] if 'fename' in db_rec else ''
@@ -189,7 +190,7 @@ _init_函数的功能在于初始化JointsDataset模型，设置一些参数和�
         if data_numpy is None:
             logger.error('=> fail to read {}'.format(image_file))
             raise ValueError('Fail to read {}'.format(image_file))
-	
+  
         joints = db_rec['joints_3d']# 人体3d关键点的所有坐标
         joints_vis = db_rec['joints_3d_vis']# 人体3d关键点的所有可视坐标
 
@@ -232,14 +233,14 @@ _init_函数的功能在于初始化JointsDataset模型，设置一些参数和�
             trans,
             (int(self.image_size[0]), int(self.image_size[1])),
             flags=cv2.INTER_LINEAR)
-	
+  
         if self.transform:
             input = self.transform(input)
-	
+  
         for i in range(self.num_joints):
             if joints_vis[i, 0] > 0.0:
                 joints[i, 0:2] = affine_transform(joints[i, 0:2], trans)
-	
+  
         target, target_weight = self.generate_target(joints, joints_vis)
 
         target = torch.from_numpy(target)
@@ -318,7 +319,7 @@ def generate_target(self, joints, joints_vis):
                 # Image range 判断边界,获得有有效的图片像素边界
                 img_x = max(0, ul[0]), min(br[0], self.heatmap_size[0])
                 img_y = max(0, ul[1]), min(br[1], self.heatmap_size[1])
-		
+    
                 # 如果该关键点对应的target_weight>0.5(即表示该关键点可见),则把关键点附近的特征点赋值成gaussian
                 v = target_weight[joint_id]
                 if v > 0.5:
@@ -339,7 +340,7 @@ def generate_target(self, joints, joints_vis):
 
 如下的左图对应于resnet-18/34使用的基本块，右图是50/101/152所使用的，由于他们都比较深，所以有图相比于左图使用了1x1卷积来降维。
 
-![2286710399-5cd94d794a930_articlex](C:\Users\pc\Desktop\hrnet_pic\2286710399-5cd94d794a930_articlex.png)
+![在这里插入图片描述](https://img-blog.csdnimg.cn/20201029151244399.png#pic_center)
 
 基本模块主要是BasicBlock、Bottleneck，现在进行逐个分析：
 
@@ -456,7 +457,7 @@ def generate_target(self, joints, joints_vis):
    判断`num_branches (int)` 和 `num_blocks, num_inchannels, num_channels (list)` 三者的长度是否一致，否则报错；
 
    ```python
-   	# 判断三个参数长度是否一致，否则报错
+    # 判断三个参数长度是否一致，否则报错
        def _check_branches(self, num_branches, blocks, num_blocks,
                            num_inchannels, num_channels):
            if num_branches != len(num_blocks):
@@ -559,23 +560,23 @@ for i in range(num_branches if self.multi_scale_output else 1)
 该语句的作用在于，如果需要产生多分辨率的结果，就双层循环num_branches次，如果只需要产生最高分辨率的表示，就将i确定为0。
 
 - 如果`j > i`，此时的目标是将所有分支上采样到和`i`分支相同的分辨率并融合，也就是说`j`所代表的分支分辨率比`i`分支低，`2**(j-i)`表示`j`分支上采样这么多倍才能和`i`分支分辨率相同。先使用1x1卷积将`j`分支的通道数变得和`i`分支一致，进而跟着BN，然后依据上采样因子将`j`分支分辨率上采样到和`i`分支分辨率相同，此处使用最近邻插值；
+![在这里插入图片描述](https://img-blog.csdnimg.cn/20201029151341482.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzM5ODYyMjIz,size_16,color_FFFFFF,t_70#pic_center)
 
 ```python
 if j > i:
-	fuse_layer.append(
-		nn.Sequential(
-			nn.Conv2d(
-				num_inchannels[j],
-				num_inchannels[i],
-				1, 1, 0, bias=False
-			),
-			nn.BatchNorm2d(num_inchannels[i]),
-			nn.Upsample(scale_factor=2**(j-i), mode='nearest')
-		)
-	)
+  fuse_layer.append(
+    nn.Sequential(
+      nn.Conv2d(
+        num_inchannels[j],
+        num_inchannels[i],
+        1, 1, 0, bias=False
+      ),
+      nn.BatchNorm2d(num_inchannels[i]),
+      nn.Upsample(scale_factor=2**(j-i), mode='nearest')
+    )
+  )
 ```
 
-![300346915-5cd94d973ac3e_articlex](C:\Users\pc\Desktop\hrnet_pic\300346915-5cd94d973ac3e_articlex.png)
 
 - 如果`j = i`，也就是说自身与自身之间不需要融合，nothing to do；
 
@@ -587,6 +588,9 @@ elif j == i:
 - 如果`j < i`，转换角色，此时最终目标是将所有分支采样到和`i`分支相同的分辨率并融合，注意，此时`j`所代表的分支分辨率比`i`分支高，正好和(2.1)相反。此时再次内嵌了一个循环，这层循环的作用是当`i-j > 1`时，也就是说两个分支的分辨率差了不止二倍，此时还是两倍两倍往上采样，例如`i-j = 2`时，`j`分支的分辨率比`i`分支大4倍，就需要上采样两次，循环次数就是2；
 
 **i.**  当`k == i - j - 1`时，举个例子，`i = 2`,`j = 1`, 此时仅循环一次，并采用当前模块，此时直接将`j`分支使用3x3的步长为2的卷积下采样(不使用bias)，后接BN，不使用ReLU；
+
+![在这里插入图片描述](https://img-blog.csdnimg.cn/20201029151407745.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzM5ODYyMjIz,size_16,color_FFFFFF,t_70#pic_center)
+
 
 ```python
 for k in range(i-j):
@@ -604,24 +608,521 @@ for k in range(i-j):
         )
 ```
 
-![3884250527-5cd94da504bd0_articlex](C:\Users\pc\Desktop\hrnet_pic\3884250527-5cd94da504bd0_articlex.png)
 
 **ii.**  当`k != i - j - 1`时，举个例子，`i = 3`,`j = 1`, 此时循环两次，先采用当前模块，将`j`分支使用3x3的步长为2的卷积下采样(不使用bias)两倍，后接BN和ReLU，紧跟着再使用(2.3.1)中的模块，这是为了保证最后一次二倍下采样的卷积操作不使用ReLU，猜测也是为了保证融合后特征的多样性；
 
+![在这里插入图片描述](https://img-blog.csdnimg.cn/20201029151640401.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzM5ODYyMjIz,size_16,color_FFFFFF,t_70#pic_center)
+
+
 ```python
 else:
-	num_outchannels_conv3x3 = num_inchannels[j]
-	conv3x3s.append(
-		nn.Sequential(
-			nn.Conv2d(
-				num_inchannels[j],
-				num_outchannels_conv3x3,
-				3, 2, 1, bias=False
-			),
-			nn.BatchNorm2d(num_outchannels_conv3x3),
-			nn.ReLU(True)
-		)
-	)
+  num_outchannels_conv3x3 = num_inchannels[j]
+  conv3x3s.append(
+    nn.Sequential(
+      nn.Conv2d(
+        num_inchannels[j],
+        num_outchannels_conv3x3,
+        3, 2, 1, bias=False
+      ),
+      nn.BatchNorm2d(num_outchannels_conv3x3),
+      nn.ReLU(True)
+    )
+  )
 ```
 
-![1185755708-5cd94dafcecce_articlex](C:\Users\pc\Desktop\hrnet_pic\1185755708-5cd94dafcecce_articlex.png)
+#### 3.2.3 整合模块-PoseHighResolutionNet
+
+1. **stage1**
+
+   进行一系列的卷积操作，获得最初的特征图N11
+
+   ```python
+      self.conv1 = nn.Conv2d(3, 64, kernel_size=3, stride=2, padding=1,
+                                  bias=False)
+           self.bn1 = nn.BatchNorm2d(64, momentum=BN_MOMENTUM)
+           self.conv2 = nn.Conv2d(64, 64, kernel_size=3, stride=2, padding=1,
+                                  bias=False)
+           self.bn2 = nn.BatchNorm2d(64, momentum=BN_MOMENTUM)
+           self.relu = nn.ReLU(inplace=True)
+           self.layer1 = self._make_layer(Bottleneck, 64, 4)
+   ```
+
+2. **stage2**
+
+- 首先根据原先设定，获得相关配置信息。对于第二阶段，num_channels=[32,64]，num_channels表示输出通道，最后的64是新建平行分支N2的输出通道数；block为Bottleneck，在论文中提到，第一个stage到第二个stage变换时，使用Bottleneck.
+- 之后会生成新的平行N2分支网络，即N11 --> N21,N22这个过程，同时如果输入输出通道不一致时。会对输入的特征图x进行通道变换.
+- 最后对平行子网进行加工，让其输出的y，可以当做下一个stage的输入x，这里的pre_stage_channels为当前阶段的输出通道数，也就是一个stage的输入通道数，同时平行子网信息交换模块，也包含其中
+
+```python
+    self.stage2_cfg = extra['STAGE2']
+        num_channels = self.stage2_cfg['NUM_CHANNELS']
+        block = blocks_dict[self.stage2_cfg['BLOCK']]
+        num_channels = [
+            num_channels[i] * block.expansion for i in range(len(num_channels))
+        ]
+        
+        self.transition1 = self._make_transition_layer([256], num_channels)
+      
+        self.stage2, pre_stage_channels = self._make_stage(
+            self.stage2_cfg, num_channels)
+```
+
+3. **stage 3**
+
+- 首先根据原先设定，获取stage3的相关配置信息。对于第三阶段，num_channels=[32,64,128],num_channels表示输出通道,最后的128是新建平行分支N3的输出通道数；这里的block为BasicBlock,在论文中有提到,**除了第一个stage到第二个stage变换时使用Bottleneck,其余的都是使用BasicBlock**
+- 之后会生成新的平行分支N3网络,即N22-->N32,N33这个过程时，如果输入输出通道不一致时。会对输入的特征图x进行通道变换.
+- 最后对平行子网进行加工，让其输出的y，可以当做下一个stage的输入x，这里的pre_stage_channels为当前阶段的输出通道数，也就是一个stage的输入通道数，同时平行子网信息交换模块，也包含其中
+
+```python
+    self.stage3_cfg = extra['STAGE3']
+        num_channels = self.stage3_cfg['NUM_CHANNELS']
+        block = blocks_dict[self.stage3_cfg['BLOCK']]
+        num_channels = [
+            num_channels[i] * block.expansion for i in range(len(num_channels))
+        ]
+        
+        self.transition2 = self._make_transition_layer(
+            pre_stage_channels, num_channels)
+   
+        self.stage3, pre_stage_channels = self._make_stage(
+            self.stage3_cfg, num_channels)
+```
+
+4. **stage 4**
+
+- 首先根据原先设定，获取stage4的相关配置信息。对于第四阶段，num_channels=[32,64,128,256],num_channels表示输出通道,最后的256是新建平行分支N3的输出通道数；这里的block为BasicBlock
+- 之后会生成新的平行分支N3网络,即N33-->N43,N44这个过程时，如果输入输出通道不一致时。会对输入的特征图x进行通道变换.
+- 最后对平行子网进行加工，让其输出的y，可以当做下一个stage的输入x，这里的pre_stage_channels为当前阶段的输出通道数，也就是一个stage的输入通道数，同时平行子网信息交换模块，也包含其中
+
+```python
+    self.stage4_cfg = extra['STAGE4']
+        num_channels = self.stage4_cfg['NUM_CHANNELS']
+        block = blocks_dict[self.stage4_cfg['BLOCK']]
+        num_channels = [
+            num_channels[i] * block.expansion for i in range(len(num_channels))
+        ]
+        
+        self.transition3 = self._make_transition_layer(
+            pre_stage_channels, num_channels)
+        
+        self.stage4, pre_stage_channels = self._make_stage(
+            self.stage4_cfg, num_channels, multi_scale_output=False)
+```
+
+5. **整合预测**
+
+   对最终的特征图混合之后，进行一次卷积，预测人体关键点的heatmap
+
+   ```python
+      self.final_layer = nn.Conv2d(
+               in_channels=pre_stage_channels[0],
+               out_channels=cfg['MODEL']['NUM_JOINTS'],
+               kernel_size=extra['FINAL_CONV_KERNEL'],
+               stride=1,
+               padding=1 if extra['FINAL_CONV_KERNEL'] == 3 else 0
+           )
+    
+           self.pretrained_layers = extra['PRETRAINED_LAYERS']
+   ```
+
+6. **重要函数**
+
+   i. _make_transition_layer
+
+   该函数的作用在于生成下一阶段同等分辨率和一般分辨率的分支。首先会进行循环遍历，对每个分支进行处理
+
+   不是最后一个分支：如果当前一层的输入通道和输出通道不相等，则通过卷积对通道数进行变换；如果当前层的输入=输出通道数，则维持原样；
+
+   是最后一个分支：新建一个分支，并且这个分支分辨率会减少一半
+
+   ```python
+   def _make_transition_layer(
+               self, num_channels_pre_layer, num_channels_cur_layer):
+           num_branches_cur = len(num_channels_cur_layer)
+           num_branches_pre = len(num_channels_pre_layer)
+   
+           transition_layers = []
+           for i in range(num_branches_cur):
+               if i < num_branches_pre:
+                   if num_channels_cur_layer[i] != num_channels_pre_layer[i]:
+                       transition_layers.append(
+                           nn.Sequential(
+                               nn.Conv2d(
+                                   num_channels_pre_layer[i],
+                                   num_channels_cur_layer[i],
+                                   3, 1, 1, bias=False
+                               ),
+                               nn.BatchNorm2d(num_channels_cur_layer[i]),
+                               nn.ReLU(inplace=True)
+                           )
+                       )
+                   else:
+                       transition_layers.append(None)
+               else:
+                   conv3x3s = []
+                   for j in range(i+1-num_branches_pre):
+                       inchannels = num_channels_pre_layer[-1]
+                       outchannels = num_channels_cur_layer[i] \
+                           if j == i-num_branches_pre else inchannels
+                       conv3x3s.append(
+                           nn.Sequential(
+                               nn.Conv2d(
+                                   inchannels, outchannels, 3, 2, 1, bias=False
+                               ),
+                               nn.BatchNorm2d(outchannels),
+                               nn.ReLU(inplace=True)
+                           )
+                       )
+                   transition_layers.append(nn.Sequential(*conv3x3s))
+   
+           return nn.ModuleList(transition_layers)
+   ```
+
+   ii. _make_stage函数
+
+   该函数的作用在于生成stage时的*HighResolutionModule*
+
+   ```python
+    def _make_stage(self, layer_config, num_inchannels,
+                       multi_scale_output=True):
+           """
+                   当stage=2时： num_inchannels=[32,64]           multi_scale_output=Ture
+                   当stage=3时： num_inchannels=[32,64,128]       multi_scale_output=Ture
+                   当stage=4时： num_inchannels=[32,64,128,256]   multi_scale_output=False
+           """
+           # 当stage=2,3,4时,num_modules分别为：1,4,3
+           # 表示HighResolutionModule（平行之网络交换信息模块）模块的数目
+           num_modules = layer_config['NUM_MODULES']
+   
+           # 当stage=2,3,4时,num_branches分别为：2,3,4,表示每个stage平行网络的数目
+           num_branches = layer_config['NUM_BRANCHES']
+   
+           # 当stage=2,3,4时,num_blocks分别为：[4,4], [4,4,4], [4,4,4,4],
+           # 表示每个stage blocks(BasicBlock或者BasicBlock)的数目
+           num_blocks = layer_config['NUM_BLOCKS']
+   
+           # 当stage=2,3,4时,num_channels分别为：[32,64],[32,64,128],[32,64,128,256]
+           # 在对应stage, 对应每个平行子网络的输出通道数
+           num_channels = layer_config['NUM_CHANNELS']
+   
+           # 当stage=2,3,4时,分别为：BasicBlock,BasicBlock,
+           block = blocks_dict[layer_config['BLOCK']]
+   
+           # 当stage=2,3,4时,都为：SUM,表示特征融合的方式
+           fuse_method = layer_config['FUSE_METHOD']
+   
+           modules = []
+           # 根据num_modules的数目创建HighResolutionModule
+           for i in range(num_modules):
+               # multi_scale_output is only used last module
+               # multi_scale_output 只被用再最后一个HighResolutionModule
+               if not multi_scale_output and i == num_modules - 1:
+                   reset_multi_scale_output = False
+               else:
+                   reset_multi_scale_output = True
+   
+               # 根据参数,添加HighResolutionModule到
+               modules.append(
+                   HighResolutionModule(
+                       num_branches,
+                       block,
+                       num_blocks,
+                       num_inchannels,
+                       num_channels,
+                       fuse_method,
+                       reset_multi_scale_output
+                   )
+               )
+               # 获得最后一个HighResolutionModule的输出通道数
+               num_inchannels = modules[-1].get_num_inchannels()
+   
+           return nn.Sequential(*modules), num_inchannels
+   ```
+
+
+#### 3.2.4 forward
+
+1. 第一阶段：经过一系列的卷积, 获得初步特征图,总体过程为x[b,3,256,192]-->x[b,256,64,48]
+
+```python
+    x = self.conv1(x)
+        x = self.bn1(x)
+        x = self.relu(x)
+        x = self.conv2(x)
+        x = self.bn2(x)
+        x = self.relu(x)
+        x = self.layer1(x)
+```
+
+2. 第二阶段：其中包含了创建分支的过程,即 N11-->N21,N22
+
+   总体过程为:
+              x[b,256,64,48] ---> y[b, 32, 64, 48]  因为通道数不一致,通过卷积进行通道数变换
+                                         y[b, 64, 32, 24]  通过新建平行分支生成
+
+   ```python
+      x_list = []
+           for i in range(self.stage2_cfg['NUM_BRANCHES']):
+               if self.transition1[i] is not None:
+                   x_list.append(self.transition1[i](x))
+               else:
+                   x_list.append(x)
+            y_list = self.stage2(x_list)
+   ```
+
+3. 第三阶段：其中包含了创建分支的过程,即 N22-->N32,N33
+
+   总体过程为：
+
+   ​    y[b, 32, 64, 48] ---> x[b, 32,  64, 48]   因为通道数一致,没有做任何操作
+   ​        y[b, 64, 32, 24] ---> x[b, 64,  32, 24]   因为通道数一致,没有做任何操作
+   ​                                           x[b, 128, 16, 12]   通过新建平行分支生成
+
+   ```python
+      x_list = []
+           for i in range(self.stage3_cfg['NUM_BRANCHES']):
+               if self.transition2[i] is not None:
+                   x_list.append(self.transition2[i](y_list[-1]))
+               else:
+                   x_list.append(y_list[i])
+           y_list = self.stage3(x_list)
+   ```
+
+4. 第四阶段：其中包含了创建分支的过程,即 N33-->N43,N44
+
+   总体过程为：
+
+   ​    y[b, 32,  64, 48] ---> x[b, 32,  64, 48]  因为通道数一致,没有做任何操作
+   ​         y[b, 64,  32, 24] ---> x[b, 64,  32, 24]  因为通道数一致,没有做任何操作
+   ​         y[b, 128, 16, 12] ---> x[b, 128, 16, 12]  因为通道数一致,没有做任何操作
+   ​                                             x[b, 256, 8,  6 ]  通过新建平行分支生成
+
+   ```python
+      x_list = []
+           for i in range(self.stage4_cfg['NUM_BRANCHES']):
+               if self.transition3[i] is not None:
+                   x_list.append(self.transition3[i](y_list[-1]))
+               else:
+                   x_list.append(y_list[i])
+   ```
+
+   之后进行多尺度特征融合：
+
+   ​    x[b, 32,  64, 48]  --->
+   ​        x[b, 64,  32, 24]  --->
+   ​        x[b, 128, 16, 12] --->
+   ​        x[b, 256, 8,  6 ]   --->       y[b, 32,  64, 48]
+
+5. 预测阶段：
+
+   y[b, 32, 64, 48] --> x[b, 16, 64, 48]
+
+   ```python
+   x = self.final_layer(y_list[0])
+   ```
+
+## 4 源码分析（训练阶段）
+
+解析参数->构建网络模型->加载训练测试数据集迭代器->迭代训练->模型评估保存
+
+```python
+def parse_args():
+    parser = argparse.ArgumentParser(description='Train keypoints network')
+    # general 指定yaml文件的路径
+    parser.add_argument('--cfg',
+                        help='experiment configure file name',
+                        required=True,
+                        type=str)
+# 暂时没有具体实现
+    parser.add_argument('opts',
+                        help="Modify config options using the command-line",
+                        default=None,
+                        nargs=argparse.REMAINDER)
+
+    # philly 模型的目录
+    parser.add_argument('--modelDir',
+                        help='model directory',
+                        type=str,
+                        default='')
+    # log 输出tensorboard的目录
+    parser.add_argument('--logDir',
+                        help='log directory',
+                        type=str,
+                        default='')
+    # data 训练数据的目录
+    parser.add_argument('--dataDir',
+                        help='data directory',
+                        type=str,
+                        default='')
+    # premodel 预训练模型的目录
+    parser.add_argument('--prevModelDir',
+                        help='prev Model directory',
+                        type=str,
+                        default='')
+
+    args = parser.parse_args()
+
+    return args
+
+
+def main():
+    args = parse_args() # 对输入的参数进行解析
+    update_config(cfg, args) # 根据输入参数对cfg进行更新 
+
+# 创建logger，用于记录训练过程的打印信息
+    logger, final_output_dir, tb_log_dir = create_logger(
+        cfg, args.cfg, 'train')
+
+    logger.info(pprint.pformat(args))
+    logger.info(cfg)
+
+    # cudnn related setting 使用GPU的一些相关设置
+    cudnn.benchmark = cfg.CUDNN.BENCHMARK
+    torch.backends.cudnn.deterministic = cfg.CUDNN.DETERMINISTIC
+    torch.backends.cudnn.enabled = cfg.CUDNN.ENABLED
+
+#根据配置文件构建网络
+    print('models.'+cfg.MODEL.NAME+'.get_pose_net')
+    model = eval('models.'+cfg.MODEL.NAME+'.get_pose_net')(
+        cfg, is_train=True
+    )
+
+    # copy model file 拷贝lib/models/pose_hrnet.py文件到输出目录之中
+    this_dir = os.path.dirname(__file__)
+    shutil.copy2(
+        os.path.join(this_dir, '../lib/models', cfg.MODEL.NAME + '.py'),
+        final_output_dir)
+    # logger.info(pprint.pformat(model))
+
+    # 用于训练信息的图形化表示
+    writer_dict = {
+        'writer': SummaryWriter(log_dir=tb_log_dir),
+        'train_global_steps': 0,
+        'valid_global_steps': 0,
+    }
+
+    dump_input = torch.rand(
+        (1, 3, cfg.MODEL.IMAGE_SIZE[1], cfg.MODEL.IMAGE_SIZE[0])
+    )
+    writer_dict['writer'].add_graph(model, (dump_input, ))
+
+    logger.info(get_model_summary(model, dump_input))
+
+    # 让模型支持多GPU训练
+    model = torch.nn.DataParallel(model, device_ids=[0,]).cuda()
+
+    # 用于计算loss
+    # define loss function (criterion) and optimizer
+    criterion = JointsMSELoss(
+        use_target_weight=cfg.LOSS.USE_TARGET_WEIGHT
+    ).cuda()
+
+    # Data loading code 对输入图像数据进行正则化处理
+    normalize = transforms.Normalize(
+        mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]
+    )
+    # 创建训练以及测试数据的迭代器
+    train_dataset = eval('dataset.'+cfg.DATASET.DATASET)(
+        cfg, cfg.DATASET.ROOT, cfg.DATASET.TRAIN_SET, True,
+        transforms.Compose([
+            transforms.ToTensor(),
+            normalize,
+        ])
+    )
+    valid_dataset = eval('dataset.'+cfg.DATASET.DATASET)(
+        cfg, cfg.DATASET.ROOT, cfg.DATASET.TEST_SET, False,
+        transforms.Compose([
+            transforms.ToTensor(),
+            normalize,
+        ])
+    )
+
+    train_loader = torch.utils.data.DataLoader(
+        train_dataset,
+        batch_size=1,
+        shuffle=cfg.TRAIN.SHUFFLE,
+        num_workers=0,
+        pin_memory=cfg.PIN_MEMORY
+    )
+    valid_loader = torch.utils.data.DataLoader(
+        valid_dataset,
+        batch_size=1,
+        shuffle=False,
+        num_workers=0,
+        pin_memory=cfg.PIN_MEMORY
+    )
+
+    # 模型加载以及优化策略的相关配置
+    best_perf = 0.0
+    best_model = False
+    last_epoch = -1
+    optimizer = get_optimizer(cfg, model)
+    begin_epoch = cfg.TRAIN.BEGIN_EPOCH
+    checkpoint_file = os.path.join(
+        final_output_dir, 'checkpoint.pth'
+    )
+
+    if cfg.AUTO_RESUME and os.path.exists(checkpoint_file):
+        logger.info("=> loading checkpoint '{}'".format(checkpoint_file))
+        checkpoint = torch.load(checkpoint_file)
+        begin_epoch = checkpoint['epoch']
+        best_perf = checkpoint['perf']
+        last_epoch = checkpoint['epoch']
+        model.load_state_dict(checkpoint['state_dict'])
+
+        optimizer.load_state_dict(checkpoint['optimizer'])
+        logger.info("=> loaded checkpoint '{}' (epoch {})".format(
+            checkpoint_file, checkpoint['epoch']))
+
+    lr_scheduler = torch.optim.lr_scheduler.MultiStepLR(
+        optimizer, cfg.TRAIN.LR_STEP, cfg.TRAIN.LR_FACTOR,
+        last_epoch=last_epoch
+    )
+
+    # 循环迭代进行训练
+    for epoch in range(begin_epoch, cfg.TRAIN.END_EPOCH):
+        lr_scheduler.step()
+
+        # train for one epoch
+        train(cfg, train_loader, model, criterion, optimizer, epoch,
+              final_output_dir, tb_log_dir, writer_dict)
+
+
+        # evaluate on validation set
+        perf_indicator = validate(
+            cfg, valid_loader, valid_dataset, model, criterion,
+            final_output_dir, tb_log_dir, writer_dict
+        )
+
+        if perf_indicator >= best_perf:
+            best_perf = perf_indicator
+            best_model = True
+        else:
+            best_model = False
+
+        logger.info('=> saving checkpoint to {}'.format(final_output_dir))
+        save_checkpoint({
+            'epoch': epoch + 1,
+            'model': cfg.MODEL.NAME,
+            'state_dict': model.state_dict(),
+            'best_state_dict': model.module.state_dict(),
+            'perf': perf_indicator,
+            'optimizer': optimizer.state_dict(),
+        }, best_model, final_output_dir)
+
+    final_model_state_file = os.path.join(
+        final_output_dir, 'final_state.pth'
+    )
+    logger.info('=> saving final model state to {}'.format(
+        final_model_state_file)
+    )
+    torch.save(model.module.state_dict(), final_model_state_file)
+    writer_dict['writer'].close()
+
+
+if __name__ == '__main__':
+    main()
+
+```
+
+## 5 数据流分析
